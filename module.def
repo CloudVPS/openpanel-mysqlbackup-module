@@ -1,0 +1,64 @@
+module MySQLBackup            < uuid a274ee63-2853-4e20-8af7-bb8506aef301
+                              < version 1.0
+                              < languages en_EN
+                              < apitype commandline
+                              < getconfig false
+                              #< requires MySQL:Database
+                              < author Karl White
+                              < license GPLv3
+                              < url http://www.charisma-studios.com
+                              
+class MySQLBackup             < uuid 37d2e104-a6d7-4d13-9b64-1b28a9318b88
+                              < version 1.0
+                              < indexing manual
+                              < requires MySQL:Database
+                              < uniquein class
+                              < shortname DB Snapshots
+                              < title Database Snapshots
+                              < description Create a backup of a MySQL database
+                              < emptytext 'Database Snapshots' are backups of a database. By frequently backing up your databases you can easily recover them in the unfortunate event of sudden data loss.
+                              < capabilities create delete update
+       
+    string name               : Snapshot Name
+                              < regexp ^[a-zA-Z0-9- ]*$
+                              < gridwidth 10
+       
+    string id                 : Sub-folder (// for root)
+                              < regexp ^/[a-zA-Z0-9-/]*/$
+                              < default /subdir/
+                              < example /subdir/
+                              < gridwidth 10
+                              < required true
+       
+    string username           : Username
+                              < regexp ^[a-zA-Z0-9_]{5,20}$
+                              < default username123
+                              < example username123
+                              < gridwidth 10
+                              < required true
+ 
+    password password         : Password (6+ chars)
+                              < regexp ^(?=.*[A-Za-z])(?=.*[0-9])(?!.*\s).{6,32}$
+                              < gridhide true
+                              < visible false
+ 
+    password password2        : Repeat Password
+                              < regexp ^(?=.*[A-Za-z])(?=.*[0-9])(?!.*\s).{6,32}$
+                              < gridhide true
+                              < visible false
+                              
+# ============================================================================
+# ENUMS
+# ============================================================================
+
+# ============================================================================
+# AUTHD
+# ============================================================================
+authd fileops
+    match *                   : *
+                              < user root
+                              < group root
+                              < perms 0755
+authd commands
+    command                   install-folder-contents
+    command                   change-permission

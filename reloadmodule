@@ -1,0 +1,2 @@
+coreunreg MySQLBackup.module
+/etc/init.d/openpanel-core restart

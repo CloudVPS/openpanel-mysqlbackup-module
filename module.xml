@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<com.openpanel.opencore.module>
+	<name>MySQLBackup.module</name>
+	<uuid>a274ee63-2853-4e20-8af7-bb8506aef301</uuid>
+	<version>1.0</version>
+	<license>GPLv3</license>
+	<author>Karl White</author>
+	<url>http://www.charisma-studios.com</url>
+	<languages en_EN=""/>
+	<implementation>
+		<apitype>commandline</apitype>
+		<getconfig>false</getconfig>
+	</implementation>
+	<classes>
+		<class id="MySQLBackup">
+			<uuid>37d2e104-a6d7-4d13-9b64-1b28a9318b88</uuid>
+			<version>1.0</version>
+			<indexing>manual</indexing>
+			<requires>MySQL:Database</requires>
+			<uniquein>class</uniquein>
+			<shortname>DB Snapshots</shortname>
+			<title>Database Snapshots</title>
+			<description>Create a backup of a MySQL database</description>
+			<emptytext>'Database Snapshots' are backups of a database. By frequently backing up your databases you can easily recover them in the unfortunate event of sudden data loss.</emptytext>
+			<capabilities create="true" delete="true" update="true"/>
+			<parameters>
+				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9- ]*$" gridwidth="10">Snapshot Name</p>
+				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/subdir/" example="/subdir/" gridwidth="10">Sub-folder (// for root)</p>
+				<p id="username" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9_]{5,20}$" default="username123" example="username123" gridwidth="10">Username</p>
+				<p id="password" enabled="true" visible="false" required="true" type="password" regexp="^(?=.*[A-Za-z])(?=.*[0-9])(?!.*s).{6,32}$" gridhide="true">Password (6+ chars)</p>
+				<p id="password2" enabled="true" visible="false" required="true" type="password" regexp="^(?=.*[A-Za-z])(?=.*[0-9])(?!.*s).{6,32}$" gridhide="true">Repeat Password</p>
+			</parameters>
+		</class>
+	</classes>
+	<authdops>
+		<fileops>
+			<fileop pattern="*" user="root" group="root" perms="0755">*</fileop>
+		</fileops>
+		<scripts>
+			<script id="install-folder-contents"/>
+			<script id="change-permission"/>
+		</scripts>
+	</authdops>
+</com.openpanel.opencore.module>
