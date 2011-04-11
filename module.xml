@@ -21,24 +21,31 @@
 			<shortname>DB Snapshots</shortname>
 			<title>Database Snapshots</title>
 			<description>Create a backup of a MySQL database</description>
-			<emptytext>'Database Snapshots' are backups of a database. By frequently backing up your databases you can easily recover them in the unfortunate event of sudden data loss.</emptytext>
+			<emptytext>'Database Snapshots' are automated backups of a database. By frequently backing up your databases you can easily recover them in the unfortunate event of data loss.</emptytext>
 			<capabilities create="true" delete="true" update="true"/>
+			<singleton>mysqlbackup</singleton>
 			<parameters>
-				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9- ]*$" gridwidth="10">Snapshot Name</p>
-				<p id="id" enabled="true" visible="true" required="true" type="string" regexp="^/[a-zA-Z0-9-/]*/$" default="/subdir/" example="/subdir/" gridwidth="10">Sub-folder (// for root)</p>
-				<p id="username" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9_]{5,20}$" default="username123" example="username123" gridwidth="10">Username</p>
-				<p id="password" enabled="true" visible="false" required="true" type="password" regexp="^(?=.*[A-Za-z])(?=.*[0-9])(?!.*s).{6,32}$" gridhide="true">Password (6+ chars)</p>
-				<p id="password2" enabled="true" visible="false" required="true" type="password" regexp="^(?=.*[A-Za-z])(?=.*[0-9])(?!.*s).{6,32}$" gridhide="true">Repeat Password</p>
+				<p id="enabled" enabled="true" visible="true" required="true" type="bool" default="true" gridhide="true">Enabled</p>
+				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9-_]*$" gridwidth="50">Snapshot Name</p>
+				<p id="frequency" enabled="true" visible="true" required="true" type="enum" default="Daily" gridwidth="25">Snapshot Frequency</p>
+				<p id="email" enabled="true" visible="true" required="false" type="string" example="webmaster@example.com" default="webmaster@example.com" gridwidth="25">Email Address</p>
 			</parameters>
 		</class>
 	</classes>
+	<enums>
+		<enum id="frequency">
+			<value id="Hourly" val="Hourly">Hourly</value>
+			<value id="Daily" val="Daily">Daily</value>
+			<value id="Weekly" val="Weekly">Weekly</value>
+			<value id="Monthly" val="Monthly">Monthly</value>
+		</enum>
+	</enums>
 	<authdops>
 		<fileops>
 			<fileop pattern="*" user="root" group="root" perms="0755">*</fileop>
 		</fileops>
-		<scripts>
-			<script id="install-folder-contents"/>
-			<script id="change-permission"/>
-		</scripts>
+		<objects>
+			<object id="mysql.pwd">/etc/openpanel/mysql.pwd</object>
+		</objects>
 	</authdops>
 </com.openpanel.opencore.module>
