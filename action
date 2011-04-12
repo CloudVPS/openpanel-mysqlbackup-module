@@ -56,6 +56,7 @@ MySQLBackup.create() {
       echo 'else' &>> "$jobName"
       echo '  (echo -e "An error has occured attempting to perform a Database Snapshot for the database: $id\n\nPlease check the Database Snapshot settings in OpenPanel.\n\n$(date)";uuencode $backupName $backupName) | mail -s "Important! OpenPanel Database Snapshot Failed ($name)" $email' &>> "$jobName"
       echo 'fi' &>> "$jobName"
+      echo 'rm $backupName' &>> "$jobName"
       chmod -w 755 "$jobName"
 
       # Move script to cron directory
