@@ -33,8 +33,8 @@ MySQLBackup.create() {
       error="Invalid frequency specified"
     fi
 
-    #-------------------------------------------------------
-    # Perform an initial backup/email, and create a cron job
+    #--------------------
+    # Create the cron job
     if [ -n "$jobPath" ]; then
 
       # Create the cron job script
@@ -58,7 +58,7 @@ MySQLBackup.create() {
       echo 'fi' &>> "$jobName"
       chmod -w 755 "$jobName"
 
-      # Move temporary file to cron directory
+      # Move script to cron directory
       authd installfile "tmp/$jobName" "$jobPath"
     fi
 
