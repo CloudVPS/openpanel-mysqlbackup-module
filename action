@@ -65,7 +65,7 @@ MySQLBackup.create() {
 
     # Clean up (simply remove tmp folder)
     cd /var/openpanel/conf/staging/MySQLBackup
-    rm -R /openpanel/conf/staging/MySQLBackup/tmp
+    rm -R /var/openpanel/conf/staging/MySQLBackup/tmp
 
     if [ $error != "" ]; then
       exiterror $error
