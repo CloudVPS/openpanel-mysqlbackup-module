@@ -1,42 +1,6 @@
 #!/bin/bash
 . /var/openpanel/api/sh/module.sh
 
-
-MySQLBackup.parseXML() {
-  if [ $# != 1 ]; then
-    exiterror "MySQLBackup.parseXML called with incorrect number of parameters: '$*'"
-  else
-    xmlFile=$1
-    elemList=( $(cat $xmlFile | tr '\n' ' ' | XMLLINT_INDENT="" xmllint --format - | /bin/grep -e "</.*>$" | while read line; do \
-      echo $line | sed -e 's/^.*<\///' | cut -d '>' -f 1; \
-    done) )
-
-    totalNoOfTags=${#elemList[@]}; ((totalNoOfTags--))
-    suffix=$(echo ${elemList[$totalNoOfTags]} | tr -d '</>')
-    suffix="${suffix}_"
-
-    for (( i = 0 ; i < ${#elemList[@]} ; i++ )); do
-      elem=${elemList[$i]}
-      elemLine=$(cat $xmlFile | tr '\n' ' ' | XMLLINT_INDENT="" xmllint --format - | /bin/grep "</$elem>")
-      echo $elemLine | grep -e "^</[^ ]*>$" 1>/dev/null 2>&1
-      if [ "0" = "$?" ]; then
-        continue
-      fi
-      elemVal=$(echo $elemLine | tr '\011' '\040'| sed -e 's/^[ ]*//' -e 's/^<.*>\([^<].*\)<.*>$/\1/' | sed -e 's/^[ ]*//' | sed -e 's/[ ]*$//')
-      xmlElem="${suffix}$(echo $elem | sed 's/-/_/g')"
-      eval ${xmlElem}=`echo -ne \""${elemVal}"\"`
-      attrList=($(cat $xmlFile | tr '\n' ' ' | XMLLINT_INDENT="" xmllint --format - | /bin/grep "</$elem>" | tr '\011' '\040' | sed -e 's/^[ ]*//' | cut -d '>' -f 1  | sed -e 's/^<[^ ]*//' | tr "'" '"' | tr '"' '\n'  | tr '=' '\n' | sed -e 's/^[ ]*//' | sed '/^$/d' | tr '\011' '\040' | tr ' ' '>'))
-      for (( j = 0 ; j < ${#attrList[@]} ; j++ )); do
-        attr=${attrList[$j]}
-        ((j++))
-        attrVal=$(echo ${attrList[$j]} | tr '>' ' ')
-        attrName=`echo -ne ${xmlElem}_${attr}`
-        eval ${attrName}=`echo -ne \""${attrVal}"\"`
-      done
-    done
-  fi
-}
-
 MySQLBackup.create() {
   enabled=$(coreval MySQLBackup enabled)
   name=$(coreval MySQLBackup name)
@@ -93,7 +57,7 @@ MySQLBackup.create() {
       echo 'fi' &>> "$jobName"
       chmod 755 "$jobName"
 
-      # Move temporary file to cron directory
+      # Move temporary file to cron directory (using faked session id, since it isn't required anyway)
       authd runscript install-folder-contents "0123456789" "/var/openpanel/conf/staging/MySQLBackup/tmp/" "$jobPath" "0" "0" "0" "-f"
       authd runscript change-permission "0123456789" "$jobPath/$jobName" "$(whoami)" "$(whoami)" "755"
     fi
@@ -112,7 +76,7 @@ MySQLBackup.delete() {
   id=$(coreval MySQL:Database id)
   jobName="${id,,}-timed-job"
 
-  # Remove any cron instances for this database
+  # Remove any cron instances for this database (using faked session id, since it isn't required anyway)
   if [ -f "/etc/cron.hourly/$jobName" ]; then
     authd runscript remove-single-file "0123456789" "/etc/cron.hourly/$jobName"
   fi
