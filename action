@@ -3,12 +3,12 @@
 
 MySQLBackup.create() {
   enabled=$(coreval MySQLBackup enabled)
-  name=$(coreval MySQLBackup name)
-  frequency=$(coreval MySQLBackup frequency)
-  id=$(coreval MySQL:Database id)
-  email=$(coreval MySQLBackup email)
+  name=`coreval MySQLBackup name | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
+  frequency=`coreval MySQLBackup frequency | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
+  id=`coreval MySQL:Database id | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
+  email=`coreval MySQLBackup email | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
   error=""
-
+  
   if [ $enabled = true ]; then
     #----------------------
     # Create temporary file
@@ -19,7 +19,7 @@ MySQLBackup.create() {
     cd tmp
     rm /var/openpanel/conf/staging/MySQLBackup/tmp/*
 
-    # Calculate cron job path and filename
+    # Calculate cron job path and filename (${id,,} requires bash4)
     jobName="${id,,}-timed-job"
     if [ $frequency = "Hourly" ]; then
       jobPath="/etc/cron.hourly"
@@ -58,7 +58,7 @@ MySQLBackup.create() {
       echo 'fi' &>> "$jobName"
       chmod -w 755 "$jobName"
 
-      # Move temporary file to cron directory (using faked session id, since it isn't required anyway)
+      # Move temporary file to cron directory
       authd installfile "tmp/$jobName" "$jobPath"
     fi
 
@@ -73,7 +73,7 @@ MySQLBackup.create() {
 }
 
 MySQLBackup.delete() {
-  id=$(coreval MySQL:Database id)
+  id=`coreval MySQL:Database id | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
   jobName="${id,,}-timed-job"
 
   # Remove any cron instances for this database
