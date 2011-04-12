@@ -43,14 +43,14 @@
 	<authdops>
 		<fileops>
 			<fileop pattern="*" user="root" group="root" perms="0755">*</fileop>
+			<fileop pattern="/*" user="root" group="root" perms="0755">/*</fileop>
 		</fileops>
-		<objects>
-			<object id="mysql.pwd">/etc/openpanel/mysql.pwd</object>
-		</objects>
+		<commands>
+			<command id="installfile"/>
+			<command id="deletefile"/>
+		</commands>
 		<scripts>
-			<script id="install-folder-contents"/>
-			<script id="remove-single-file"/>
-			<script id="change-permission"/>
+			<script id="install-single-file"/>
 		</scripts>
 	</authdops>
 </com.openpanel.opencore.module>

@@ -13,10 +13,11 @@ MySQLBackup.create() {
     #----------------------
     # Create temporary file
     cd /var/openpanel/conf/staging/MySQLBackup/
-    mkdir tmp
+    if [ ! -d "/var/openpanel/conf/staging/MySQLBackup/tmp" ]; then
+      mkdir tmp
+    fi
     cd tmp
-    rm -R *
-    echo -n "" &> $jobName
+    rm /var/openpanel/conf/staging/MySQLBackup/tmp/*
 
     # Calculate cron job path and filename
     jobName="${id,,}-timed-job"
@@ -34,7 +35,7 @@ MySQLBackup.create() {
 
     #-------------------------------------------------------
     # Perform an initial backup/email, and create a cron job
-    if [ -x $jobPath ]; then
+    if [ -n "$jobPath" ]; then
 
       # Create the cron job script
       echo "#!/bin/bash" &> "$jobName"
@@ -55,16 +56,15 @@ MySQLBackup.create() {
       echo 'else' &>> "$jobName"
       echo '  (echo -e "An error has occured attempting to perform a Database Snapshot for the database: $id\n\nPlease check the Database Snapshot settings in OpenPanel.\n\n$(date)";uuencode $backupName $backupName) | mail -s "Important! OpenPanel Database Snapshot Failed ($name)" $email' &>> "$jobName"
       echo 'fi' &>> "$jobName"
-      chmod 755 "$jobName"
+      chmod -w 755 "$jobName"
 
       # Move temporary file to cron directory (using faked session id, since it isn't required anyway)
-      authd runscript install-folder-contents "0123456789" "/var/openpanel/conf/staging/MySQLBackup/tmp/" "$jobPath" "0" "0" "0" "-f"
-      authd runscript change-permission "0123456789" "$jobPath/$jobName" "$(whoami)" "$(whoami)" "755"
+      authd installfile "tmp/$jobName" "$jobPath"
     fi
 
     # Clean up (simply remove tmp folder)
     cd /var/openpanel/conf/staging/MySQLBackup
-    rm -R tmp
+    rm -R /openpanel/conf/staging/MySQLBackup/tmp
 
     if [ $error != "" ]; then
       exiterror $error
@@ -76,18 +76,18 @@ MySQLBackup.delete() {
   id=$(coreval MySQL:Database id)
   jobName="${id,,}-timed-job"
 
-  # Remove any cron instances for this database (using faked session id, since it isn't required anyway)
+  # Remove any cron instances for this database
   if [ -f "/etc/cron.hourly/$jobName" ]; then
-    authd runscript remove-single-file "0123456789" "/etc/cron.hourly/$jobName"
+    authd deletefile "/etc/cron.hourly/$jobName"
   fi
   if [ -f "/etc/cron.daily/$jobName" ]; then
-    authd runscript remove-single-file "0123456789" "/etc/cron.daily/$jobName"
+    authd deletefile "/etc/cron.hourly/$jobName"
   fi
   if [ -f "/etc/cron.weekly/$jobName" ]; then
-    authd runscript remove-single-file "0123456789" "/etc/cron.weekly/$jobName"
+    authd deletefile "/etc/cron.hourly/$jobName"
   fi
   if [ -f "/etc/cron.monthly/$jobName" ]; then
-    authd runscript remove-single-file "0123456789" "/etc/cron.monthly/$jobName"
+    authd deletefile "/etc/cron.hourly/$jobName"
   fi
 }
 
