@@ -17,7 +17,7 @@
 			<version>1.0</version>
 			<indexing>manual</indexing>
 			<requires>MySQL:Database</requires>
-			<uniquein>class</uniquein>
+			<uniquein>parent</uniquein>
 			<shortname>DB Snapshots</shortname>
 			<title>Database Snapshots</title>
 			<description>Create a backup of a MySQL database</description>
@@ -47,5 +47,10 @@
 		<objects>
 			<object id="mysql.pwd">/etc/openpanel/mysql.pwd</object>
 		</objects>
+		<scripts>
+			<script id="install-folder-contents"/>
+			<script id="remove-single-file"/>
+			<script id="change-permission"/>
+		</scripts>
 	</authdops>
 </com.openpanel.opencore.module>
