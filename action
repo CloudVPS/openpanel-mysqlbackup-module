@@ -8,11 +8,17 @@ MySQLBackup.create() {
   id=`coreval MySQL:Database id | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
   email=`coreval MySQLBackup email | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
   error=""
+  userid=`coreval MySQL:Database ownerid`
   
+  cd /var/openpanel/conf/staging/MySQLBackup/
   if [ $enabled = true ]; then
+    #-----------------------
+    # Create owner directory (this will hold all database backups)
+    if [ ! -d "/var/openpanel/conf/staging/MySQLBackup/$userid" ]; then
+      mkdir $userid
+    fi
     #----------------------
     # Create temporary file
-    cd /var/openpanel/conf/staging/MySQLBackup/
     if [ ! -d "/var/openpanel/conf/staging/MySQLBackup/tmp" ]; then
       mkdir tmp
     fi
@@ -48,7 +54,7 @@ MySQLBackup.create() {
       echo "email=\"$email\"" &>> "$jobName"
       echo 'dbuser="openpanel"' &>> "$jobName"
       echo 'dbpass=$(cat /etc/openpanel/mysql.pwd)' &>> "$jobName"
-      echo 'cd /var/openpanel/conf/staging/MySQLBackup/' &>> "$jobName"
+      echo 'cd /var/openpanel/conf/staging/MySQLBackup/$userid' &>> "$jobName"
       echo 'backupName="${id,,}-$(date +%Y%m%d-%H%M%S)-${name,,}.sql"' &>> "$jobName"
       echo 'mysqldump -u $dbuser -p$dbpass $id > $backupName' &>> "$jobName"
       echo 'if [ -f "$backupName" ]; then' &>> "$jobName"
@@ -56,7 +62,7 @@ MySQLBackup.create() {
       echo 'else' &>> "$jobName"
       echo '  (echo -e "An error has occured attempting to perform a Database Snapshot for the database: $id\n\nPlease check the Database Snapshot settings in OpenPanel.\n\n$(date)";uuencode $backupName $backupName) | mail -s "Important! OpenPanel Database Snapshot Failed ($name)" $email' &>> "$jobName"
       echo 'fi' &>> "$jobName"
-      echo 'rm $backupName' &>> "$jobName"
+#      echo 'rm $backupName' &>> "$jobName"
       chmod -w 755 "$jobName"
 
       # Move script to cron directory
@@ -82,13 +88,13 @@ MySQLBackup.delete() {
     authd deletefile "/etc/cron.hourly/$jobName"
   fi
   if [ -f "/etc/cron.daily/$jobName" ]; then
-    authd deletefile "/etc/cron.hourly/$jobName"
+    authd deletefile "/etc/cron.daily/$jobName"
   fi
   if [ -f "/etc/cron.weekly/$jobName" ]; then
-    authd deletefile "/etc/cron.hourly/$jobName"
+    authd deletefile "/etc/cron.weekly/$jobName"
   fi
   if [ -f "/etc/cron.monthly/$jobName" ]; then
-    authd deletefile "/etc/cron.hourly/$jobName"
+    authd deletefile "/etc/cron.monthly/$jobName"
   fi
 }
 
