@@ -8,14 +8,14 @@ MySQLBackup.create() {
   id=`coreval MySQL:Database id | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
   email=`coreval MySQLBackup email | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
   error=""
-  userid=`coreval MySQL:Database ownerid`
+  userid=`coreval MySQLBackup uuid`
   
   cd /var/openpanel/conf/staging/MySQLBackup/
   if [ $enabled = true ]; then
     #-----------------------
     # Create owner directory (this will hold all database backups)
-    if [ ! -d "/var/openpanel/conf/staging/MySQLBackup/$userid" ]; then
-      mkdir $userid
+    if [ ! -d "/var/openpanel/conf/staging/MySQLBackup/${userid:0:8}" ]; then
+      mkdir ${userid:0:8}
     fi
     #----------------------
     # Create temporary file
@@ -54,9 +54,9 @@ MySQLBackup.create() {
       echo "email=\"$email\"" &>> "$jobName"
       echo 'dbuser="openpanel"' &>> "$jobName"
       echo 'dbpass=$(cat /etc/openpanel/mysql.pwd)' &>> "$jobName"
-      echo 'cd /var/openpanel/conf/staging/MySQLBackup/$userid' &>> "$jobName"
-      echo 'backupName="${id,,}-$(date +%Y%m%d-%H%M%S)-${name,,}.sql"' &>> "$jobName"
-      echo 'mysqldump -u $dbuser -p$dbpass $id > $backupName' &>> "$jobName"
+      echo 'cd /var/openpanel/conf/staging/MySQLBackup/'"${userid:0:8}" &>> "$jobName"
+      echo 'backupName="$id~$(date +%Y%m%d-%H%M%S)~$name.sql"' &>> "$jobName"
+      echo 'mysqldump -u $dbuser -p$dbpass --add-drop-table $id > $backupName' &>> "$jobName"
       echo 'if [ -f "$backupName" ]; then' &>> "$jobName"
       echo '  (echo -e "Attached is the scheduled Database Snapshot for the database: $id\n\n$(date)";uuencode $backupName $backupName) | mail -s "OpenPanel Database Snapshot ($name)" $email' &>> "$jobName"
       echo 'else' &>> "$jobName"
@@ -102,6 +102,106 @@ MySQLBackup.update() {
   # Simply call delete/create, to recreate the cron job
   MySQLBackup.delete
   MySQLBackup.create
+set > /tmp/vars.log
+}
+
+MySQLBackup.create-snapshot() {
+  id=""
+  echo "MySQLBackup.create-snapshot" &>> /var/openpanel/conf/staging/MySQLBackup/create.log
+}
+
+MySQLSnapshots.update() {
+  objectid=`coreval OpenCORE:Session objectid`
+  restore=$(coreval MySQLSnapshots restore)
+  delete=$(coreval MySQLSnapshots delete)
+  if [ $restore = true ] || [ $delete = true ]; then
+    backupdir=/var/openpanel/conf/staging/MySQLBackup/${objectid:0:8}
+    if [ -d $backupdir ]; then
+      cd $backupdir
+      for f in *.sql
+      do
+        filehash=$(echo -n $f | md5sum)
+        fileuuid="${objectid:0:8}-${filehash:8:4}-${filehash:12:4}-${filehash:16:4}-${filehash:20:12}"
+        OLDIFS=$IFS
+        IFS='~'
+        arr=($f)
+        dbname=${arr[0]}
+        IFS=$OLDIFS
+        if [ $fileuuid = $objectid ]; then
+          if [ -f "$backupdir/$f" ]; then
+            if [ $restore = true ]; then
+              authd runscript mysql-operation "$objectid" "$backupdir/$f" --verbose $dbname
+              exitok
+            elif [ $delete = true ]; then
+              authd deletefile "$backupdir/$f"
+              exitok
+            fi
+          fi
+        fi
+      done
+      exiterror "Failed to locate backup file."
+    else
+      exiterror "Backup directory not found: $backupdir"
+    fi
+  fi
+}
+MySQLSnapshots.admin() {
+  id=""
+  echo "MySQLSnapshots.admin" &>> /var/openpanel/conf/staging/MySQLBackup/archive.log
+}
+MySQLSnapshots.listobjects() {
+  userid=`coreval OpenCORE:Session parentid`
+
+  echo "MySQLSnapshots.listobjects ($(date))" &>> /var/openpanel/conf/staging/MySQLBackup/archive.log
+  set > /tmp/vars2.log
+
+  backupdir=/var/openpanel/conf/staging/MySQLBackup/${userid:0:8}
+  if [ -d $backupdir ]; then
+    cd $backupdir
+    echo "<openpanel.module>"
+    echo "    <dict id=\"objects\">"
+    echo "        <dict id=\"MySQLSnapshots\" type=\"class\">"
+    $index=0
+    for f in *.sql
+    do
+      if [ -f $f ]; then
+        index=$(($index+1))
+        filehash=$(echo -n $f | md5sum)
+        fileuuid="${userid:0:8}-${filehash:8:4}-${filehash:12:4}-${filehash:16:4}-${filehash:20:12}"
+        OLDIFS=$IFS
+        IFS='~'
+        arr=($f)
+        dbname=${arr[0]}
+        shdate=${arr[1]//-*/}
+        shtime=${arr[1]//*-/}
+        shtimestamp=$(date -d "$shdate ${shtime:0:2}:${shtime:2:2}:${shtime:4:2}" +"%l:%M %p UTC")
+        shdatestamp=$(date -d "$shdate ${shtime:0:2}:${shtime:2:2}:${shtime:4:2}" +"%A, %B %e, %Y")
+        shname=${arr[2]//.sql/}
+        IFS=$OLDIFS
+        echo "                <dict id=\"$fileuuid\" type=\"object\">"
+        echo "                        <string id=\"index\">$index</string>"
+        echo "                        <string id=\"id\">$shname</string>"
+        echo "                        <string id=\"time\">$shtimestamp</string>"
+        echo "                        <string id=\"date\">$shdatestamp</string>"
+        echo "                        <string id=\"restore\">false</string>"
+        echo "                        <string id=\"class\">MySQLSnapshots</string>"
+        echo "                        <string id=\"metaid\">mysqlsnapshots</string>"
+        echo "                        <string id=\"uuid\">$fileuuid</string>"
+        echo "                        <string id=\"parentid\">$userid</string>"
+        echo "                </dict>"
+      fi
+    done
+    echo "        </dict>"
+    echo "    </dict>"
+    echo "    <dict id=\"OpenCORE:Result\">"
+    echo "        <integer id=\"error\">0</integer>"
+    echo "        <string id=\"message\">OK</string>"
+    echo "    </dict>"
+    echo "</openpanel.module>"
+    echo "quit" >&3
+    exit 0
+  fi
 }
 
 implement MySQLBackup.module
+implement MySQLSnapshots.module

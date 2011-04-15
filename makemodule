@@ -1,4 +1,4 @@
-coreunreg MySQLBackup.module
+#coreunreg MySQLBackup.module
 mkmodulexml < /var/openpanel/modules/MySQLBackup.module/module.def > /var/openpanel/modules/MySQLBackup.module/module.xml
 sed -i "s#commands>#scripts>#g" "/var/openpanel/modules/MySQLBackup.module/module.xml"
 sed -i "s#<command #<script #g" "/var/openpanel/modules/MySQLBackup.module/module.xml"

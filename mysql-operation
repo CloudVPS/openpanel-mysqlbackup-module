@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+
+shift
+pipeval=$1
+shift
+
+echo "Entered mysql-operation ($*)..." >> /var/openpanel/log/mysql-operation.log
+
+dbpass=$(cat /etc/openpanel/mysql.pwd)
+echo "mysql --user=openpanel --password=$dbpass $* < $pipeval" >> /var/openpanel/log/mysql-operation.log
+echo "$(mysql --user=openpanel --password=$dbpass $* < $pipeval)" >> /var/openpanel/log/mysql-operation.log
+
+echo "Exiting mysql-operation... ($*)" >> /var/openpanel/log/mysql-operation.log
+exit 0

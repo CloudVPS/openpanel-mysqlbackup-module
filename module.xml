@@ -28,7 +28,29 @@
 				<p id="enabled" enabled="true" visible="true" required="true" type="bool" default="true" gridhide="true">Enabled</p>
 				<p id="name" enabled="true" visible="true" required="true" type="string" regexp="^[a-zA-Z0-9-_]*$" gridwidth="50">Snapshot Name</p>
 				<p id="frequency" enabled="true" visible="true" required="true" type="enum" default="Daily" gridwidth="25">Snapshot Frequency</p>
-				<p id="email" enabled="true" visible="true" required="false" type="string" example="webmaster@example.com" default="webmaster@example.com" gridwidth="25">Email Address</p>
+				<p id="email" enabled="true" visible="true" required="true" type="string" example="webmaster@example.com" default="webmaster@example.com" gridwidth="25">Email Address</p>
+			</parameters>
+		</class>
+		<class id="MySQLSnapshots">
+			<uuid>7a4e3317-16a2-4c11-9481-72024b53d38b</uuid>
+			<version>1.0</version>
+			<indexing>manual</indexing>
+			<requires>MySQLBackup</requires>
+			<uniquein>class</uniquein>
+			<dynamic>true</dynamic>
+			<shortname>Snapshot Archive</shortname>
+			<title>Snapshot Archive</title>
+			<gridheight>180</gridheight>
+			<description>A list of all previous snapshots</description>
+			<emptytext>No database snapshots</emptytext>
+			<capabilities update="true" listobjects="true"/>
+			<parameters>
+				<p id="index" enabled="false" visible="true" required="false" type="integer" gridwidth="5" default="0" clihide="true" gridlabel="#">Snapshot Index</p>
+				<p id="id" enabled="true" visible="true" required="false" type="string" regexp="^[a-zA-Z0-9-_]*$" gridwidth="30" default="none">Snapshot Name</p>
+				<p id="time" enabled="false" visible="true" required="false" type="string" gridwidth="15" default="none">Time</p>
+				<p id="date" enabled="false" visible="true" required="false" type="string" gridwidth="30" default="none">Date</p>
+				<p id="restore" enabled="true" visible="true" required="true" type="bool" gridwidth="10" default="false" gridhide="true">Restore</p>
+				<p id="delete" enabled="true" visible="true" required="true" type="bool" gridwidth="10" default="false" gridhide="true">Delete Permanently</p>
 			</parameters>
 		</class>
 	</classes>
@@ -45,12 +67,8 @@
 			<fileop pattern="*" user="root" group="root" perms="0755">*</fileop>
 			<fileop pattern="/*" user="root" group="root" perms="0755">/*</fileop>
 		</fileops>
-		<commands>
-			<command id="installfile"/>
-			<command id="deletefile"/>
-		</commands>
 		<scripts>
-			<script id="install-single-file"/>
+			<script id="mysql-operation"/>
 		</scripts>
 	</authdops>
 </com.openpanel.opencore.module>

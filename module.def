@@ -37,6 +37,59 @@ class MySQLBackup             < uuid 37d2e104-a6d7-4d13-9b64-1b28a9318b88
                               < default webmaster@example.com
                               < gridwidth 25
                               < required true
+
+#    method create-snapshot    : Create Snapshot
+#                              < args static
+                              
+class MySQLSnapshots          < uuid 7a4e3317-16a2-4c11-9481-72024b53d38b
+                              < version 1.0
+                              < indexing manual
+                              < requires MySQLBackup
+                              < uniquein class
+                              < dynamic true
+                              < shortname Snapshot Archive
+                              < title Snapshot Archive
+                              < gridheight 180
+                              < description A list of all previous snapshots
+                              < emptytext No database snapshots
+                              < capabilities update listobjects
+                              #< capabilities create update delete
+
+    integer index             : Snapshot Index
+                              < enabled false
+                              < required false
+                              < gridwidth 5
+                              < default 0
+                              < clihide true
+                              < gridlabel \#
+       
+    string id                 : Snapshot Name
+                              < regexp ^[a-zA-Z0-9-_]*$
+                              < gridwidth 30
+                              < required false
+                              < default none
+       
+    string time               : Time
+                              < gridwidth 15
+                              < enabled false
+                              < required false
+                              < default none
+       
+    string date               : Date
+                              < gridwidth 30
+                              < enabled false
+                              < required false
+                              < default none
+
+    bool restore              : Restore
+                              < gridwidth 10
+                              < default false
+                              < gridhide true
+
+    bool delete               : Delete Permanently
+                              < gridwidth 10
+                              < default false
+                              < gridhide true
                               
 # ============================================================================
 # ENUMS
@@ -59,3 +112,5 @@ authd fileops
                               < user root
                               < group root
                               < perms 0755
+authd commands
+    command                   mysql-operation
