@@ -1,0 +1,13 @@
+Source: openpanel-mod-mysqlbackup
+Section: misc
+Priority: optional
+Maintainer: Karl White <karl.white@charisma-studios.com>
+Build-Depends: debhelper (>= 5), libgrace-dev, openpanel-dev, openpanel-mkmodulexml
+Standards-Version: 3.7.2
+
+Package: openpanel-mod-mysqlbackup
+Architecture: any
+Pre-Depends: openpanel-core, openpanel-authd
+Depends: openpanel-core (>= 0.8.3), openpanel-mod-apache2, ${shlibs:Depends}, ${misc:Depends}
+Description: OpenPanel module to automate MySQL database backups 
+ Openpanel MySQL backup module

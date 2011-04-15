@@ -41,16 +41,15 @@
 			<shortname>Snapshot Archive</shortname>
 			<title>Snapshot Archive</title>
 			<gridheight>180</gridheight>
-			<description>A list of all previous snapshots</description>
+			<description>snapshot archive</description>
 			<emptytext>No database snapshots</emptytext>
-			<capabilities update="true" listobjects="true"/>
+			<capabilities update="true" delete="true" listobjects="true"/>
 			<parameters>
 				<p id="index" enabled="false" visible="true" required="false" type="integer" gridwidth="5" default="0" clihide="true" gridlabel="#">Snapshot Index</p>
 				<p id="id" enabled="true" visible="true" required="false" type="string" regexp="^[a-zA-Z0-9-_]*$" gridwidth="30" default="none">Snapshot Name</p>
 				<p id="time" enabled="false" visible="true" required="false" type="string" gridwidth="15" default="none">Time</p>
 				<p id="date" enabled="false" visible="true" required="false" type="string" gridwidth="30" default="none">Date</p>
 				<p id="restore" enabled="true" visible="true" required="true" type="bool" gridwidth="10" default="false" gridhide="true">Restore</p>
-				<p id="delete" enabled="true" visible="true" required="true" type="bool" gridwidth="10" default="false" gridhide="true">Delete Permanently</p>
 			</parameters>
 		</class>
 	</classes>
@@ -70,5 +69,8 @@
 		<scripts>
 			<script id="mysql-operation"/>
 		</scripts>
+		<objects>
+			<object id="mysql.pwd">/etc/openpanel/mysql.pwd</object>
+		</objects>
 	</authdops>
 </com.openpanel.opencore.module>

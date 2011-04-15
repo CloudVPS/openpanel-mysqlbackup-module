@@ -50,9 +50,9 @@ class MySQLSnapshots          < uuid 7a4e3317-16a2-4c11-9481-72024b53d38b
                               < shortname Snapshot Archive
                               < title Snapshot Archive
                               < gridheight 180
-                              < description A list of all previous snapshots
+                              < description snapshot archive
                               < emptytext No database snapshots
-                              < capabilities update listobjects
+                              < capabilities update delete listobjects
                               #< capabilities create update delete
 
     integer index             : Snapshot Index
@@ -86,10 +86,10 @@ class MySQLSnapshots          < uuid 7a4e3317-16a2-4c11-9481-72024b53d38b
                               < default false
                               < gridhide true
 
-    bool delete               : Delete Permanently
-                              < gridwidth 10
-                              < default false
-                              < gridhide true
+#    bool delete               : Delete Permanently
+#                              < gridwidth 10
+#                              < default false
+#                              < gridhide true
                               
 # ============================================================================
 # ENUMS
@@ -112,5 +112,8 @@ authd fileops
                               < user root
                               < group root
                               < perms 0755
-authd commands
-    command                   mysql-operation
+
+authd objects
+    object mysql.pwd          : /etc/openpanel/mysql.pwd
+
+

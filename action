@@ -1,6 +1,28 @@
 #!/bin/bash
 . /var/openpanel/api/sh/module.sh
 
+try_authd() {
+  cmd="$1"
+  line="$1"
+  shift
+  while [ ! -z "$1" ]; do
+    line="${line} \"$1\""
+    shift
+  done
+
+  echo "$line" >&3
+  read reply <&3
+  sz=$(echo "$reply" | cut -f2 -d' ')
+  reply=`echo "$reply" | cut -c1`
+  if [ "$reply" = "+" ]; then
+    if [ "$cmd" = "getobject" ]; then
+      dd bs=1 count=$sz <&3
+    fi
+    return 0
+  fi
+  return 1
+}
+
 MySQLBackup.create() {
   enabled=$(coreval MySQLBackup enabled)
   name=`coreval MySQLBackup name | grep "^[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=+-@.]*$"`
@@ -63,7 +85,7 @@ MySQLBackup.create() {
       echo '  (echo -e "An error has occured attempting to perform a Database Snapshot for the database: $id\n\nPlease check the Database Snapshot settings in OpenPanel.\n\n$(date)";uuencode $backupName $backupName) | mail -s "Important! OpenPanel Database Snapshot Failed ($name)" $email' &>> "$jobName"
       echo 'fi' &>> "$jobName"
 #      echo 'rm $backupName' &>> "$jobName"
-      chmod -w 755 "$jobName"
+#      chmod 755 "$jobName"
 
       # Move script to cron directory
       authd installfile "tmp/$jobName" "$jobPath"
@@ -102,7 +124,6 @@ MySQLBackup.update() {
   # Simply call delete/create, to recreate the cron job
   MySQLBackup.delete
   MySQLBackup.create
-set > /tmp/vars.log
 }
 
 MySQLBackup.create-snapshot() {
@@ -113,8 +134,7 @@ MySQLBackup.create-snapshot() {
 MySQLSnapshots.update() {
   objectid=`coreval OpenCORE:Session objectid`
   restore=$(coreval MySQLSnapshots restore)
-  delete=$(coreval MySQLSnapshots delete)
-  if [ $restore = true ] || [ $delete = true ]; then
+  if [ $restore = true ]; then
     backupdir=/var/openpanel/conf/staging/MySQLBackup/${objectid:0:8}
     if [ -d $backupdir ]; then
       cd $backupdir
@@ -130,10 +150,8 @@ MySQLSnapshots.update() {
         if [ $fileuuid = $objectid ]; then
           if [ -f "$backupdir/$f" ]; then
             if [ $restore = true ]; then
-              authd runscript mysql-operation "$objectid" "$backupdir/$f" --verbose $dbname
-              exitok
-            elif [ $delete = true ]; then
-              authd deletefile "$backupdir/$f"
+              dbpass=$(authd getobject mysql.pwd)
+              mysql --verbose --user=openpanel --pass=$dbpass $dbname < $backupdir/$f
               exitok
             fi
           fi
@@ -145,9 +163,31 @@ MySQLSnapshots.update() {
     fi
   fi
 }
-MySQLSnapshots.admin() {
-  id=""
-  echo "MySQLSnapshots.admin" &>> /var/openpanel/conf/staging/MySQLBackup/archive.log
+MySQLSnapshots.delete() {
+  objectid=`coreval OpenCORE:Session objectid`
+  backupdir=/var/openpanel/conf/staging/MySQLBackup/${objectid:0:8}
+  if [ -d $backupdir ]; then
+    cd $backupdir
+    for f in *.sql
+    do
+      filehash=$(echo -n $f | md5sum)
+      fileuuid="${objectid:0:8}-${filehash:8:4}-${filehash:12:4}-${filehash:16:4}-${filehash:20:12}"
+      OLDIFS=$IFS
+      IFS='~'
+      arr=($f)
+      dbname=${arr[0]}
+      IFS=$OLDIFS
+      if [ $fileuuid = $objectid ]; then
+        if [ -f "$backupdir/$f" ]; then
+          authd deletefile "$backupdir/$f"
+          exitok
+        fi
+      fi
+    done
+    exiterror "Failed to locate backup file."
+  else
+    exiterror "Backup directory not found: $backupdir"
+  fi
 }
 MySQLSnapshots.listobjects() {
   userid=`coreval OpenCORE:Session parentid`
@@ -204,4 +244,3 @@ MySQLSnapshots.listobjects() {
 }
 
 implement MySQLBackup.module
-implement MySQLSnapshots.module
