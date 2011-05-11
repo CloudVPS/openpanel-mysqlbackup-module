@@ -116,4 +116,5 @@ authd fileops
 authd objects
     object mysql.pwd          : /etc/openpanel/mysql.pwd
 
-
+authd scripts
+    script                    mysql-operation
